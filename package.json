@@ -19,5 +19,6 @@
     "fastify": "^4.28.1",
     "lodash": "^4.17.21",
     "puppeteer": "^22.9.0"
-  }
+  },
+  "packageManager": "yarn@4.4.0"
 }
