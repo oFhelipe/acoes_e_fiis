@@ -1,0 +1,33 @@
+export enum FiiHeadersIndex {
+  "Papel",
+  "Segmento",
+  "Cotação",
+  "FFO Yield",
+  "Dividend Yield",
+  "P/VP",
+  "Valor de Mercado",
+  "Liquidez",
+  "Qtd de imóveis",
+  "Preço do m2",
+  "Aluguel por m2",
+  "Cap Rate",
+  "Vacância Média",
+  "Endereço",
+}
+
+export enum FiiHeaderNames {
+  "Papel" = "Papel",
+  "Segmento" = "Segmento",
+  "Cotação" = "Cotação",
+  "FFO Yield" = "FFO Yield",
+  "Dividend Yield" = "Dividend Yield",
+  "P/VP" = "P/VP",
+  "Valor de Mercado" = "Valor de Mercado",
+  "Liquidez" = "Liquidez",
+  "Qtd de imóveis" = "Qtd de imóveis",
+  "Preço do m2" = "Preço do m2",
+  "Aluguel por m2" = "Aluguel por m2",
+  "Cap Rate" = "Cap Rate",
+  "Vacância Média" = "Vacância Média",
+  "Endereço" = "Endereço",
+}

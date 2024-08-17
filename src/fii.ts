@@ -1,7 +1,8 @@
 import puppeteer from "puppeteer";
 import lodash from "lodash";
+import fs from "fs";
 
-enum Headers {
+enum HeaderIndex {
   "Papel",
   "Segmento",
   "Cotação",
@@ -16,6 +17,23 @@ enum Headers {
   "Cap Rate",
   "Vacância Média",
   "Endereço",
+}
+
+enum HeaderNames {
+  "Papel" = "Papel",
+  "Segmento" = "Segmento",
+  "Cotação" = "Cotação",
+  "FFO Yield" = "FFO Yield",
+  "Dividend Yield" = "Dividend Yield",
+  "P/VP" = "P/VP",
+  "Valor de Mercado" = "Valor de Mercado",
+  "Liquidez" = "Liquidez",
+  "Qtd de imóveis" = "Qtd de imóveis",
+  "Preço do m2" = "Preço do m2",
+  "Aluguel por m2" = "Aluguel por m2",
+  "Cap Rate" = "Cap Rate",
+  "Vacância Média" = "Vacância Média",
+  "Endereço" = "Endereço",
 }
 
 type FormattedFii = {
@@ -43,6 +61,20 @@ function increasePrimoPoints(fiis: FormattedFii[]) {
     fiis[i] = {
       ...fiis[i],
       primo: fiis[i].primo ? fiis[i].primo + 1 : 1,
+    };
+  }
+
+  return fiis;
+}
+
+function increaseIfFFOIsGraterThanDY(fiis: FormattedFii[]) {
+  for (let i = 0; i < fiis.length; i++) {
+    fiis[i] = {
+      ...fiis[i],
+      primo:
+        fiis[i]["FFO Yield"] > fiis[i]["Dividend Yield"]
+          ? fiis[i].primo + 1
+          : fiis[i].primo,
     };
   }
 
@@ -86,7 +118,7 @@ function increasePrimoPoints(fiis: FormattedFii[]) {
 
     return cells.map((cell) => cell.innerText.trim()) as any as Headers[];
   });
-  console.log(headers);
+
   const areAllHeadersCorrect = headers.every((header, index) => {
     const expectedHeader = expectedHeaders[index];
     if (header !== expectedHeader) {
@@ -122,21 +154,24 @@ function increasePrimoPoints(fiis: FormattedFii[]) {
   });
 
   const filteredSocks = fiis.filter((fii) => {
-    const passesInPVPFilter =
-      fii[Headers["P/VP"]] >= 0.95 && fii[Headers["P/VP"]] <= 1.04;
+    const passesInDividendYield = fii[HeaderIndex["Dividend Yield"]] >= 7;
+
+    const passesInLiquidezFilter = fii[HeaderIndex["Liquidez"]] >= 500000;
 
     const passesInVacanciaMediaFilter =
-      fii[Headers["Vacância Média"]] >= 0 && fii[Headers["P/VP"]] <= 6;
+      fii[HeaderIndex["Vacância Média"]] <= 30;
 
-    const passesInLiquidezFilter = fii[Headers["Liquidez"]] >= 2000000;
+    const passesInPVPFilter =
+      fii[HeaderIndex["P/VP"]] >= 0.7 && fii[HeaderIndex["P/VP"]] <= 1.05;
 
-    const passesInImoveisFilter = fii[Headers["Qtd de imóveis"]] >= 1;
+    // const passesInFFOYieldFilter =
+    //   fii[Headers["FFO Yield"]] > fii[Headers["Dividend Yield"]];
 
     return (
+      passesInDividendYield &&
       passesInPVPFilter &&
       passesInVacanciaMediaFilter &&
-      passesInLiquidezFilter &&
-      passesInImoveisFilter
+      passesInLiquidezFilter
     );
   });
 
@@ -148,32 +183,28 @@ function increasePrimoPoints(fiis: FormattedFii[]) {
     formattedFii.primo = 0;
     return formattedFii;
   });
+  console.log(formattedResults);
+  const content = JSON.stringify(formattedResults, null, 2);
+  const caminhoArquivo = 'resultado.txt';
+
+  fs.writeFile(caminhoArquivo, content, (erro) => {
+    if (erro) {
+      console.error('Erro ao escrever o arquivo:', erro);
+    } else {
+      console.log('Arquivo escrito com sucesso!');
+    }
+  });
+
 
   formattedResults = increasePrimoPoints(
-    lodash.orderBy(formattedResults, [Headers["Vacância Média"]], ["asc"])
+    lodash.orderBy(formattedResults, [HeaderNames["Cap Rate"]], ["desc"])
   );
 
-  // formattedResults = increasePrimoPoints(
-  //   lodash.orderBy(formattedResults, [Headers["Preço do m2"]], ["desc"])
-  // );
 
-  // formattedResults = increasePrimoPoints(
-  //   lodash.orderBy(formattedResults, [Headers["Aluguel por m2"]], ["desc"])
-  // );
-
-  // formattedResults = increasePrimoPoints(
-  //   lodash.orderBy(formattedResults, [Headers["Cap Rate"]], ["desc"])
-  // );
-
-  formattedResults = increasePrimoPoints(
-    lodash.orderBy(formattedResults, [Headers["Liquidez"]], ["desc"])
-  );
-
-  // formattedResults = increasePrimoPoints(
-  //   lodash.orderBy(formattedResults, [Headers["Valor de Mercado"]], ["desc"])
-  // );
+  formattedResults = increaseIfFFOIsGraterThanDY(formattedResults);
 
   const result = lodash.orderBy(formattedResults, ["primo"], ["asc"]);
   console.log(result);
+  await browser.close();
 })();
 ("");

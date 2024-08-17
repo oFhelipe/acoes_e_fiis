@@ -1,0 +1,15 @@
+meta {
+  name: List all Fiis
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/fii?dividendYieldMin=7
+  body: none
+  auth: none
+}
+
+query {
+  dividendYieldMin: 7
+}
